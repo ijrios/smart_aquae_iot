@@ -5,10 +5,9 @@ import threading
 from eje3_ultrasonic import ultrasonic_sensor
 from led_time import led_
 import datetime
-
+global db
 TRIG = 3
 ECHO = 4
-global db
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
@@ -16,10 +15,11 @@ GPIO.setup(TRIG,GPIO.OUT)
 GPIO.setup(ECHO,GPIO.IN)
 GPIO.output(TRIG, False)
 GPIO.setup(2, GPIO.IN,pull_up_down=GPIO.PUD_UP) #Valvula manual 
-GPIO.setup(22, GPIO.IN,pull_up_down=GPIO.PUD_UP) #Valvula automatica 
+GPIO.setup(22, GPIO.IN,pull_up_down=GPIO.PUD_UP) #Valvula automatica
+GPIO.setup(23, GPIO.IN,pull_up_down=GPIO.PUD_UP) #Vaciar
 GPIO.setup (25, GPIO.OUT) #Valvula Llenado
 GPIO.setup (26, GPIO.OUT) #Valvula Vaciado
-
+#db = firebase.FirebaseApplication("https://digital-7a2c5-default-rtdb.firebaseio.com/")
 
 print ("Waiting For Sensor To Settle")
 time.sleep(1) #settling time 
@@ -75,7 +75,10 @@ def nivel_minimum(dist):
     altura_tanque=120
     nivel=altura_tanque-dist
     if(nivel<10):
+        time.sleep(2)
+        print("-------------------- ")
         print("Tanque vació: ", nivel)
+        print("-------------------- ")
         return False  
     else:
         print("No está vacío") 
@@ -86,33 +89,36 @@ def nivel_maximum(dist):
     altura_tanque=120
     nivel=altura_tanque-dist
     if(nivel>115):
+        time.sleep(2)
+        print("-------------------- ")
         print("Tanque Lleno: ", nivel)
+        print("-------------------- ")
         return False  
     else:
         print("No está LLeno") 
     return True
-        
+       
 
 def main():
     global db
+    #db = firebase.FirebaseApplication("https://digital-7a2c5-default-rtdb.firebaseio.com/")
     while True:
-
+        #db = firebase.FirebaseApplication("https://digital-7a2c5-default-rtdb.firebaseio.com/")
         distance=get_distance()
         print ("distance: ", distance)
-        
-        db = firebase.FirebaseApplication("https://digital-7a2c5-default-rtdb.firebaseio.com/")
-        t_read = threading.Thread(target = read_firebase)
+        #t_read = threading.Thread(target = read_firebase)
         #t_sensor = threading.Thread(target = ultrasonic_sensor())
         #t_sensor.start()
-        t_read.start()
+        #t_read.start()
 
         valor = "En espera"
-    	print("[INFO] Estado: {}".format(valor))
-    	db.put("/Configuracion/","Estado", valor)
+        #print("[INFO] Estado: {}".format(valor))
+        #db.put("/Configuracion/","Estado", valor)
         
         #---- Se inician Entradas y Salidas
         input_manual = GPIO.input(2) #Manual
         input_auto = GPIO.input(22) #Automatica
+        input_vacio = GPIO.input(23) #Seguir vacio
         output_llenado = GPIO.input(25) #Llenado
         output_vaciado = GPIO.input(26) #Vaciado
  
@@ -126,27 +132,26 @@ def main():
 
             print("Modo Automatico ")
             
-            if(minimun == False and maximun == True):
+            if(minimun == False and maximun == True and input_continue == False):
                 #Está vacío 
-   		valor = "Llenando"
-                GPIO.output (25, GPIO.LOW) #Se abre - Llenado
-                GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado
+                valor = "Llenando"
+                GPIO.output (25, GPIO.LOW) #Se abre - Llenado - prende led
+                GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado - no prende led
                 print("Se abre valvula llenado")
                 print("Llenando")
-    		print("[INFO] Estado: {}".format(valor))
-    		db.put("/Configuracion/","Estado", valor)
+                #print("[INFO] Estado: {}".format(valor))
+               # db.put("/Configuracion/","Estado", valor)
                 
-                 
-
-            elif(maximun == False and minimun == True):
+        
+            elif(maximun == False and minimun == True and input_continue1 == False):
                 #Está lleno
                 valor = "Vaciando"
-                GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado
-                GPIO.output (26, GPIO.LOW) #Se abre - Vaciado
+                GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado - apaga led
+                GPIO.output (26, GPIO.LOW) #Se abre - Vaciado - prende led
                 print("Se abre valvula Vaciado")
                 print("Vaciando")
-                print("[INFO] Estado: {}".format(valor))
-    		db.put("/Configuracion/","Estado", valor)
+                #print("[INFO] Estado: {}".format(valor))
+               # db.put("/Configuracion/","Estado", valor)
                 
                 
         #---------------------------Modo manual---------------------------
@@ -154,28 +159,47 @@ def main():
           
             print("Modo Manual ")
                
-            if(minimun == False and maximun == True):
-                #Está vacío 
-                valor = "Llenando"
-                GPIO.output (25, GPIO.LOW) #Se abre - Llenado
-                GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado
-                print("Se abre valvula llenado")
-                print("Llenando")
-                print("[INFO] Estado: {}".format(valor))
-    		db.put("/Configuracion/","Estado", valor)
+            if(minimun == False and maximun == True ):
+                print("Tanque vacío, desea llenar")
+                if(input_vacio == False):
+                    #Está vacío 
+                    valor = "Llenando"
+                    GPIO.output (25, GPIO.LOW) #Se abre - Llenado - prende led
+                    GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado - apaga led
+                    print("Se abre valvula llenado")
+                    time.sleep(5)
+                    print("-------------------------------")
+                    print("------------Llenando-----------")
+                    print(".------------------------------")
+                else:
+                    print("-------------------------------")
+                    print("----Esperando usuario----------")
+                    print(".------------------------------")
+                #print("[INFO] Estado: {}".format(valor))
+                #db.put("/Configuracion/","Estado", valor)
                 
             elif(maximun == False and minimun == True):
-                #Está lleno
-                valor = "Vaciando"
-                GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado
-                GPIO.output (26, GPIO.LOW) #Se abre - Vaciado
-                print("Se abre valvula Vaciado")
-                print("Vaciando")
-                print("[INFO] Estado: {}".format(valor))
-    		db.put("/Configuracion/","Estado", valor)
+                print("Tanque lleno, desea vaciar")
+                if(input_vacio == False):
+                    #Está lleno
+                    valor = "Vaciando"
+                    GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado - prende led
+                    GPIO.output (26, GPIO.LOW) #Se abre - Vaciado - apaga led
+                    print("Se abre valvula Vaciado")
+                    time.sleep(5)
+                    print("-------------------------------")
+                    print("------------Vaciando-----------")
+                    print(".------------------------------")
+                else:
+                    print("-------------------------------")
+                    print("-----Esperando usuario---------")
+                    print(".------------------------------")
+                #rint("[INFO] Estado: {}".format(valor))
+                #db.put("/Configuracion/","Estado", valor)
 
         time.sleep(1)
-   
+ 
+ 
     
 if __name__ == '__main__':
     main()
