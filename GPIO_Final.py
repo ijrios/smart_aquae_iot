@@ -1,4 +1,3 @@
-
 import RPi.GPIO as GPIO
 import time,os
 from firebase import firebase
@@ -55,16 +54,6 @@ def get_distance():
             pass
         
     return distance
-
-def write_firebase(valor):
-
-    global db
-    counter = 0
-    while True:
-        print("[INFO] Estado: {}".format(valor))
-        db.put("/Configuracion/","Estado", valor)
-    
-    time.sleep(1)
         
 def read_firebase():
     global db
@@ -107,19 +96,21 @@ def nivel_maximum(dist):
 def main():
     global db
     while True:
-        time.sleep(5)
+
         distance=get_distance()
         print ("distance: ", distance)
         
         db = firebase.FirebaseApplication("https://digital-7a2c5-default-rtdb.firebaseio.com/")
-        #write_firebase("En espera")
-        #t_write.start()
         t_read = threading.Thread(target = read_firebase)
-        t_read.start()
-        
         #t_sensor = threading.Thread(target = ultrasonic_sensor())
         #t_sensor.start()
+        t_read.start()
+
+        valor = "En espera"
+    	print("[INFO] Estado: {}".format(valor))
+    	db.put("/Configuracion/","Estado", valor)
         
+        #---- Se inician Entradas y Salidas
         input_manual = GPIO.input(2) #Manual
         input_auto = GPIO.input(22) #Automatica
         output_llenado = GPIO.input(25) #Llenado
@@ -129,49 +120,59 @@ def main():
         minimun = nivel_minimum(distance)
         maximun = nivel_maximum(distance)
         print("---------------------------")
-        #Modo automatico
+
+        #---------------------------Modo automatico---------------------------
         if (input_auto == False and input_manual == True):
+
             print("Modo Automatico ")
             
             if(minimun == False and maximun == True):
                 #Está vacío 
+   		valor = "Llenando"
                 GPIO.output (25, GPIO.LOW) #Se abre - Llenado
                 GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado
                 print("Se abre valvula llenado")
                 print("Llenando")
-                #write_firebase("LLenando")
+    		print("[INFO] Estado: {}".format(valor))
+    		db.put("/Configuracion/","Estado", valor)
                 
                  
 
             elif(maximun == False and minimun == True):
                 #Está lleno
+                valor = "Vaciando"
                 GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado
                 GPIO.output (26, GPIO.LOW) #Se abre - Vaciado
                 print("Se abre valvula Vaciado")
                 print("Vaciando")
-                #write_firebase("Vaciando")
+                print("[INFO] Estado: {}".format(valor))
+    		db.put("/Configuracion/","Estado", valor)
                 
                 
-        #Modo manual
+        #---------------------------Modo manual---------------------------
         elif (input_auto == True and input_manual == False):
-            
+          
             print("Modo Manual ")
                
             if(minimun == False and maximun == True):
                 #Está vacío 
+                valor = "Llenando"
                 GPIO.output (25, GPIO.LOW) #Se abre - Llenado
                 GPIO.output (26, GPIO.HIGH) #Se cierra - Vaciado
                 print("Se abre valvula llenado")
                 print("Llenando")
-                #write_firebase("LLenando")
+                print("[INFO] Estado: {}".format(valor))
+    		db.put("/Configuracion/","Estado", valor)
                 
             elif(maximun == False and minimun == True):
                 #Está lleno
+                valor = "Vaciando"
                 GPIO.output (25, GPIO.HIGH) #Se cierra - Llenado
                 GPIO.output (26, GPIO.LOW) #Se abre - Vaciado
                 print("Se abre valvula Vaciado")
                 print("Vaciando")
-                #write_firebase("Vaciando")
+                print("[INFO] Estado: {}".format(valor))
+    		db.put("/Configuracion/","Estado", valor)
 
         time.sleep(1)
    
