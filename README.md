@@ -28,8 +28,10 @@ Notas:
 3)	El valor reportado por el sensor de nivel deberá ser enviado a la base de datos para que el usuario pueda observarlo en línea.
 4)	Se dispondrá de un campo adicional en la base de datos el cual mostrará si el proceso se encuentra en REPOSO, LLENANDO o VACIANDO.
 
+-------------------------------------------------------------------
 ## Versión 2
 -------------------------------------------------------------------
+
 ### Objetivo:
 
 - Implementar un sistema de recolección de datos basado en MySQL-MariaDB
@@ -40,7 +42,7 @@ Notas:
 La misma empresa que le contrató para el sistema de automatización del tanque ahora requiere una solución para monitorear dos variables de su proceso: i) el nivel del tanque y ii) la cantidad de lluvia que cae en su planta (pluviosidad). Con el histórico de estos datos desean evaluar si es factible que las aguas lluvias puedan servir para los sistemas de riego, almacenándose en el tanque en cuestión. En tal virtud, se requiere que usted implemente un sistema basado en Raspberry Pi, el cual incorpore un servidor de bases de datos MySQL. En dicho servidor, usted debe recolectar las variables previamente mencionadas usando un tiempo de muestreo variable, que podrá cambiar usando un campo en Firebase. Se espera que en la base de datos MySQL se cree y alimente una tabla como se muestra a continuación:
 
 <p align="center">
-  <img src="resources\3.PNG" width="600" title="hover text">
+  <img src="resources\3.png" width="600" title="hover text">
 </p>
 
 En adición, usted también deberá programar un cliente MySQL que corra directamente en su computador para realizar consultas sobre la base de datos implementada. Dicho software recibirá la fecha inicial y la fecha final (en string) e implementará la consulta en el servidor en la Raspberry. Los registros retornados deberán ser guardados en un archivo de texto separado por comas en el computador.
