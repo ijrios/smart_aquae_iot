@@ -5,6 +5,7 @@ Created on Fri Nov 18 20:26:48 2022
 @author: JOSERIOS3PALACIOS
 
 """
+
 import datetime
 import pymysql as MySQLdb
 
